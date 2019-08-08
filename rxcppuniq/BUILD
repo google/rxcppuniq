@@ -15,7 +15,9 @@ exports_files([
 
 package_group(
     name = "internal",
+    includes = [
+    ],
     packages = [
-        "//third_party/rxcpp_uniq/...",
+        "//rxcppuniq/...",
     ],
 )
