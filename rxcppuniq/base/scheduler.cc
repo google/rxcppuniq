@@ -122,10 +122,6 @@ class ThreadPoolScheduler : public Scheduler {
     }
   }
 
-  std::unique_ptr<Worker> CreateWorker() override {
-    return absl::make_unique<WorkerImpl>(this);
-  }
-
   void Schedule(std::function<void()> task) override {
     absl::MutexLock lock(&busy_);
     todo_.push(std::move(task));
@@ -195,6 +191,10 @@ class ThreadPoolScheduler : public Scheduler {
 };
 
 }  // namespace
+
+std::unique_ptr<Worker> Scheduler::CreateWorker() {
+  return absl::make_unique<WorkerImpl>(this);
+}
 
 std::unique_ptr<Scheduler> CreateThreadPoolScheduler(std::size_t thread_count) {
   return absl::make_unique<ThreadPoolScheduler>(thread_count);

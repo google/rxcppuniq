@@ -82,7 +82,7 @@ class Scheduler {
   /**
    * Creates a new Worker based on this scheduler.
    */
-  virtual std::unique_ptr<Worker> CreateWorker() = 0;
+  virtual std::unique_ptr<Worker> CreateWorker();
 
   /**
    * Schedules a task that will execute on the scheduler.
