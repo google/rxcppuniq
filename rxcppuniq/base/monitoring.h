@@ -39,50 +39,50 @@ namespace rx {
  *
  * We may want to make this a flag if this turns out to be often needed.
  */
-constexpr bool fcp_debug = false;
+constexpr bool rx_debug = false;
 
 // Logging and Assertions
 // ======================
 
 /**
- * Defines a subset of Google style logging. Use FCP_LOG(INFO),
- * FCP_LOG(WARNING), FCP_LOG(ERROR) or FCP_LOG(FATAL) to stream log messages.
+ * Defines a subset of Google style logging. Use RX_LOG(INFO),
+ * RX_LOG(WARNING), RX_LOG(ERROR) or RX_LOG(FATAL) to stream log messages.
  * Example:
  *
- *     FCP_LOG(INFO) << "some info log";
+ *     RX_LOG(INFO) << "some info log";
  */
 // TODO(team): adapt to absl logging once available
-#define FCP_LOG(severity) _FCP_LOG_##severity
+#define RX_LOG(severity) _RX_LOG_##severity
 
-#define FCP_LOG_IF(severity, condition) \
-  !(condition) ? (void)0                \
-               : ::rx::internal::LogMessageVoidify() & _FCP_LOG_##severity
+#define RX_LOG_IF(severity, condition) \
+  !(condition) ? (void)0               \
+               : ::rx::internal::LogMessageVoidify() & _RX_LOG_##severity
 
-#define _FCP_LOG_INFO \
+#define _RX_LOG_INFO \
   ::rx::internal::LogMessage(__FILE__, __LINE__, ::absl::LogSeverity::kInfo)
-#define _FCP_LOG_WARNING \
+#define _RX_LOG_WARNING \
   ::rx::internal::LogMessage(__FILE__, __LINE__, ::absl::LogSeverity::kWarning)
-#define _FCP_LOG_ERROR \
+#define _RX_LOG_ERROR \
   ::rx::internal::LogMessage(__FILE__, __LINE__, ::absl::LogSeverity::kError)
-#define _FCP_LOG_FATAL \
+#define _RX_LOG_FATAL \
   ::rx::internal::LogMessage(__FILE__, __LINE__, ::absl::LogSeverity::kFatal)
 
 /**
  * Check that the condition holds, otherwise die. Any additional messages can
  * be streamed into the invocation. Example:
  *
- *     FCP_CHECK(condition) << "stuff went wrong";
+ *     RX_CHECK(condition) << "stuff went wrong";
  */
-#define FCP_CHECK(condition) \
-  FCP_LOG_IF(FATAL, !(condition)) << ("Check failed: " #condition ". ")
+#define RX_CHECK(condition) \
+  RX_LOG_IF(FATAL, !(condition)) << ("Check failed: " #condition ". ")
 
 /**
  * Check that the expression generating a status code is OK, otherwise die.
  * Any additional messages can be streamed into the invocation.
  */
-#define FCP_CHECK_STATUS(status)                                           \
+#define RX_CHECK_STATUS(status)                                            \
   for (auto __check_status = (status); __check_status.code() != ::rx::OK;) \
-  FCP_LOG_IF(FATAL, __check_status.code() != ::rx::OK)                     \
+  RX_LOG_IF(FATAL, __check_status.code() != ::rx::OK)                      \
       << "status not OK: " << __check_status.DebugString()
 
 // Logging Implementation Details
@@ -153,7 +153,7 @@ class LogMessage {
 
 /**
  * This class is used to cast a LogMessage instance to void within a ternary
- * expression in the expansion of FCP_LOG_IF.  The cast is necessary so
+ * expression in the expansion of RX_LOG_IF.  The cast is necessary so
  * that the types of the expressions on either side of the : match, and the &
  * operator is used because its precedence is lower than << but higher than
  * ?:.
@@ -172,28 +172,28 @@ class LogMessageVoidify {
 // This proto is re-exported by this header.
 
 /**
- * Constructor for an fcp status. A status message can be streamed into it. This
+ * Constructor for a status. A status message can be streamed into it. This
  * captures the current file and line position and includes it into the status
  * message if the status code is not OK.
  *
  * Use as in:
  *
- *   FCP_STATUS(OK);                // signal success
- *   FCP_STATUS(code) << message;   // signal failure
+ *   RX_STATUS(OK);                // signal success
+ *   RX_STATUS(code) << message;   // signal failure
  *
- * FCP_STATUS can be used in places which either expect a Status or a
+ * RX_STATUS can be used in places which either expect a Status or a
  * StatusOr<T>.
  *
  * You can configure the constructed status to also emit a log entry if the
  * status is not OK by using LogInfo, LogWarning, LogError, or LogFatal as
  * below:
  *
- *   FCP_STATUS(code).LogInfo() << message;
+ *   RX_STATUS(code).LogInfo() << message;
  *
- * If the constant fcp_debug is true, by default, all FCP_STATUS invocations
+ * If the constant rx_debug is true, by default, all RX_STATUS invocations
  * will be logged on INFO level.
  */
-#define FCP_STATUS(code) \
+#define RX_STATUS(code) \
   ::rx::internal::MakeStatusBuilder(code, __FILE__, __LINE__)
 
 /**
@@ -201,12 +201,12 @@ class LogMessageVoidify {
  * if not OK. Example:
  *
  *     Status DoSomething() {
- *       FCP_RETURN_IF_ERROR(Step1());
- *       FCP_RETURN_IF_ERROR(Step2ReturningStatusOr().status());
- *       return FCP_STATUS(OK);
+ *       RX_RETURN_IF_ERROR(Step1());
+ *       RX_RETURN_IF_ERROR(Step2ReturningStatusOr().status());
+ *       return RX_STATUS(OK);
  *     }
  */
-#define FCP_RETURN_IF_ERROR(expr)                \
+#define RX_RETURN_IF_ERROR(expr)                 \
   {                                              \
     ::rx::Status status = (expr);                \
     if (status.code() != ::rx::StatusCode::OK) { \
@@ -219,28 +219,28 @@ class LogMessageVoidify {
  * otherwise assign the value in the StatusOr to variable or declaration. Usage:
  *
  *     StatusOr<bool> DoSomething() {
- *       FCP_ASSIGN_OR_RETURN(auto value, TryComputeSomething());
+ *       RX_ASSIGN_OR_RETURN(auto value, TryComputeSomething());
  *       if (!value) {
- *         FCP_ASSIGN_OR_RETURN(value, TryComputeSomethingElse());
+ *         RX_ASSIGN_OR_RETURN(value, TryComputeSomethingElse());
  *       }
  *       return value;
  *     }
  */
-#define FCP_ASSIGN_OR_RETURN(lhs, expr) \
-  _FCP_ASSIGN_OR_RETURN_1(              \
-      _FCP_ASSIGN_OR_RETURN_CONCAT(statusor_for_aor, __LINE__), lhs, expr)
+#define RX_ASSIGN_OR_RETURN(lhs, expr) \
+  _RX_ASSIGN_OR_RETURN_1(              \
+      _RX_ASSIGN_OR_RETURN_CONCAT(statusor_for_aor, __LINE__), lhs, expr)
 
-#define _FCP_ASSIGN_OR_RETURN_1(statusor, lhs, expr) \
-  auto statusor = (expr);                            \
-  if (!statusor.ok()) {                              \
-    return statusor.status();                        \
-  }                                                  \
+#define _RX_ASSIGN_OR_RETURN_1(statusor, lhs, expr) \
+  auto statusor = (expr);                           \
+  if (!statusor.ok()) {                             \
+    return statusor.status();                       \
+  }                                                 \
   lhs = std::move(statusor).ValueOrDie();
 
 // See https://goo.gl/x3iba2 for the reason of this construction.
-#define _FCP_ASSIGN_OR_RETURN_CONCAT(x, y) \
-  _FCP_ASSIGN_OR_RETURN_CONCAT_INNER(x, y)
-#define _FCP_ASSIGN_OR_RETURN_CONCAT_INNER(x, y) x##y
+#define _RX_ASSIGN_OR_RETURN_CONCAT(x, y) \
+  _RX_ASSIGN_OR_RETURN_CONCAT_INNER(x, y)
+#define _RX_ASSIGN_OR_RETURN_CONCAT_INNER(x, y) x##y
 
 namespace internal {
 /**
@@ -268,7 +268,7 @@ class ABSL_MUST_USE_RESULT StatusOr {
    */
   inline StatusOr(const Status& status)
       : repr_(Repr(absl::in_place_index_t<kStatusIndex>(), status)) {
-    FCP_CHECK(status.code() != OK);
+    RX_CHECK(status.code() != OK);
   }
 
   /**
@@ -276,7 +276,7 @@ class ABSL_MUST_USE_RESULT StatusOr {
    */
   explicit inline StatusOr(StatusCode code)
       : repr_(Repr(absl::in_place_index_t<kStatusIndex>(), Status())) {
-    FCP_CHECK(code != OK);
+    RX_CHECK(code != OK);
     std::get<kStatusIndex>(repr_).set_code(code);
   }
 
@@ -285,7 +285,7 @@ class ABSL_MUST_USE_RESULT StatusOr {
    */
   inline StatusOr(StatusCode code, const std::string& message)
       : repr_(Repr(absl::in_place_index_t<kStatusIndex>(), Status())) {
-    FCP_CHECK(code != OK);
+    RX_CHECK(code != OK);
     std::get<kStatusIndex>(repr_).set_code(code);
     std::get<kStatusIndex>(repr_).set_message(message);
   }
@@ -316,15 +316,15 @@ class ABSL_MUST_USE_RESULT StatusOr {
    * Return the value if the StatusOr is ok, otherwise die.
    */
   inline const T& ValueOrDie() const& {
-    FCP_CHECK(ok()) << "StatusOr has no value";
+    RX_CHECK(ok()) << "StatusOr has no value";
     return absl::get<kValueIndex>(repr_);
   }
   inline T& ValueOrDie() & {
-    FCP_CHECK(ok()) << "StatusOr has no value";
+    RX_CHECK(ok()) << "StatusOr has no value";
     return absl::get<kValueIndex>(repr_);
   }
   inline T&& ValueOrDie() && {
-    FCP_CHECK(ok()) << "StatusOr has no value";
+    RX_CHECK(ok()) << "StatusOr has no value";
     return absl::get<kValueIndex>(std::move(repr_));
   }
 
@@ -427,7 +427,7 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
   const StatusCode code_;
   std::ostringstream message_;
   absl::LogSeverity log_severity_ =
-      fcp_debug ? absl::LogSeverity::kInfo : kNoLog;
+      rx_debug ? absl::LogSeverity::kInfo : kNoLog;
 };
 
 /** Workaround for ABSL_MUST_USE_RESULT ignoring constructors */

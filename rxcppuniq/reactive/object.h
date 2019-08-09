@@ -69,7 +69,7 @@ class SharedObject {
    * Access the implementation, checked.
    */
   inline const std::shared_ptr<Impl>& impl() const {
-    FCP_CHECK(impl_) << "implementation missing";
+    RX_CHECK(impl_) << "implementation missing";
     return impl_;
   }
 
@@ -157,7 +157,7 @@ class SharedObjectImpl {
    * See class documentation for when to use self().
    */
   std::shared_ptr<Impl> self() const {
-    FCP_CHECK(!self_.expired()) << "lifetime expired";
+    RX_CHECK(!self_.expired()) << "lifetime expired";
     return self_.lock();
   }
 
@@ -194,7 +194,7 @@ class UniqueObject {
    * Access the implementation, checked.
    */
   inline std::unique_ptr<Impl>& impl() {
-    FCP_CHECK(impl_) << "implementation missing (maybe moved)";
+    RX_CHECK(impl_) << "implementation missing (maybe moved)";
     return impl_;
   }
 

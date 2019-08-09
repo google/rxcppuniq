@@ -209,7 +209,7 @@ class GeneratingPublisher : public PublisherImpl<T> {
 
   void Subscribe(unique_ptr<PublisherImpl<T>> self,
                  unique_ptr<Subscriber<T>> subscriber) override {
-    FCP_CHECK(self.get() == this);
+    RX_CHECK(self.get() == this);
     new GeneratingStream<T, State>(std::move(initial_state_),
                                    std::move(generator_),
                                    std::move(subscriber));
@@ -284,7 +284,7 @@ Publisher<T>::Publisher(T const& value)
 
 template <typename T>
 Publisher<T> Publisher<T>::Error(Status const& status) {
-  FCP_CHECK(IsError(status)) << "status must indicate error";
+  RX_CHECK(IsError(status)) << "status must indicate error";
   return Publisher<T>(
       absl::make_unique<reactive_internal::GeneratingPublisher<T, Trigger>>(
           Trigger(), [status](Trigger&) { return status; }));
@@ -319,12 +319,12 @@ class ChainingStream : public Subscriber<T>, public SubscriptionImpl {
   // Subscription
 
   void Request(size_t tokens) override {
-    FCP_CHECK(base_subscription_) << "OnSubscribe has never been called";
+    RX_CHECK(base_subscription_) << "OnSubscribe has never been called";
     base_subscription_.value().Request(request_mapping_(tokens));
   }
 
   void Cancel() override {
-    FCP_CHECK(base_subscription_) << "OnSubscribe has never been called";
+    RX_CHECK(base_subscription_) << "OnSubscribe has never been called";
     if (!base_subscription_.value().has_ended()) {
       base_subscription_.value().Cancel();
     }
@@ -364,7 +364,7 @@ class ChainingPublisher : public PublisherImpl<R> {
 
   void Subscribe(unique_ptr<PublisherImpl<R>> self,
                  unique_ptr<Subscriber<R>> subscriber) override {
-    FCP_CHECK(self.get() == this);
+    RX_CHECK(self.get() == this);
     auto stream = make_unique<ChainingStream<T, R>>(
         std::move(request_mapping_), std::move(func_), std::move(subscriber));
     PublisherImpl<T>::DoSubscribe(std::move(base_), std::move(stream));
@@ -542,7 +542,7 @@ class FlatMapStream : public Subscriber<T>, public SubscriptionImpl {
     // requested) if the continuation isn't processed by now. We do not
     // Request on the base stream if cont_subscription_ is set.
     if (cont_subscription_) {
-      Terminate(FCP_STATUS(FAILED_PRECONDITION) << "flow control error");
+      Terminate(RX_STATUS(FAILED_PRECONDITION) << "flow control error");
       return;
     }
     // Compute continuation and subscribe to it.
@@ -611,7 +611,7 @@ class FlatMapStream : public Subscriber<T>, public SubscriptionImpl {
   }
 
   inline Subscription const& base_subscription() {
-    FCP_CHECK(base_subscription_) << "OnSubscribe was never called";
+    RX_CHECK(base_subscription_) << "OnSubscribe was never called";
     return base_subscription_.value();
   }
 
@@ -648,7 +648,7 @@ class FlatMapPublisherImpl : public PublisherImpl<R> {
 
   void Subscribe(unique_ptr<PublisherImpl<R>> self,
                  unique_ptr<Subscriber<R>> subscriber) override {
-    FCP_CHECK(self.get() == this);
+    RX_CHECK(self.get() == this);
     auto stream = make_unique<FlatMapStream<T, R>>(std::move(cont_),
                                                    std::move(subscriber));
     PublisherImpl<T>::DoSubscribe(std::move(base_), std::move(stream));
@@ -713,7 +713,7 @@ void AsyncOnNextHelper(StatusOr<T> event, Subscription const& subscription,
         // Lambda is stateful (but only called once); it consumes
         // wrapped_event.
         [wrapped_event, subscriber, subscription]() mutable {
-          FCP_CHECK(!subscription.has_ended())
+          RX_CHECK(!subscription.has_ended())
               << "unexpected call to stale subscriber";
           (*subscriber)->OnNext(subscription, std::move(*wrapped_event));
         });
@@ -743,14 +743,14 @@ class AsyncStream : public SubscriptionImpl,
   ~AsyncStream() override { subscription_state_->clear_subscription(); }
 
   void Cancel() override {
-    FCP_CHECK(upstream_subscription_) << "OnSubscribe has never been called";
+    RX_CHECK(upstream_subscription_) << "OnSubscribe has never been called";
     auto subscription = upstream_subscription_.value();
     // Schedule operation on producer worker
     produce_on_->Schedule([subscription] { subscription.Cancel(); });
   }
 
   void Request(std::size_t tokens) override {
-    FCP_CHECK(upstream_subscription_) << "OnSubscribe has never been called";
+    RX_CHECK(upstream_subscription_) << "OnSubscribe has never been called";
     auto subscription = upstream_subscription_.value();
     // Schedule operation in producers worker
     produce_on_->Schedule([tokens, subscription] {
@@ -763,13 +763,13 @@ class AsyncStream : public SubscriptionImpl,
   // Subscriber
 
   void OnSubscribe(Subscription const& subscription) override {
-    FCP_CHECK(!upstream_subscription_) << "OnSubscribe already called";
+    RX_CHECK(!upstream_subscription_) << "OnSubscribe already called";
     upstream_subscription_ = subscription;
     // Execute the OnSubscribe method on the consumer worker.
     auto subscription_state = subscription_state_;
     auto subscriber_ptr = subscriber_.get();
     consume_on_->Schedule([subscription_state, subscriber_ptr] {
-      FCP_CHECK(subscription_state->impl()) << "stale subscriber";
+      RX_CHECK(subscription_state->impl()) << "stale subscriber";
       subscriber_ptr->OnSubscribe(Subscription(subscription_state));
     });
   }
@@ -803,7 +803,7 @@ class AsyncPublisher : public PublisherImpl<T>,
  protected:
   void Subscribe(unique_ptr<PublisherImpl<T>> self,
                  unique_ptr<Subscriber<T>> subscriber) override {
-    FCP_CHECK(self.get() == this);
+    RX_CHECK(self.get() == this);
     // Wrap the subscription procedure into a task executed on the
     // producer worker.
     auto wrapped_input = MoveToLambda(std::move(input_));

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef RXCPPUNIQ_REACTIVE_POLY_VALUE_H_
 #define RXCPPUNIQ_REACTIVE_POLY_VALUE_H_
 
@@ -32,12 +48,12 @@ struct SerializationTraits {
   static constexpr bool Available() { return false; }
 
   static StatusOr<SerializedValue> Serialize(T&&) {
-    return FCP_STATUS(UNAVAILABLE)
+    return RX_STATUS(UNAVAILABLE)
            << "serialization not available for this type";
   }
 
   static StatusOr<T> Parse(SerializedValue&&) {
-    return FCP_STATUS(UNAVAILABLE)
+    return RX_STATUS(UNAVAILABLE)
            << "serialization not available for this type";
   }
 };
@@ -51,9 +67,7 @@ struct SerializationTraits {
  * Polymorphic values exist in-memory in an efficient form and can be converted
  * back to their typed equivalent. A subset of polymorphic values can also
  * be serialized over the network. This allows to build abstractions on top
- * of them which work similar on the network as in memory. The FCP reactive
- * runtime uses them to implement node-to-node as well as in-node communication
- * protocols.
+ * of them which work similar on the network as in memory.
  *
  * PolyValues are not copyable but only movable. This allows them to embed
  * std::unique_ptr instances. It also reflects their purpose of being transient
@@ -113,7 +127,7 @@ class PolyValue : UniqueObject<absl::any> {
               *result.move_impl(),
               [](absl::any&& packed_value) -> StatusOr<SerializedValue> {
                 if (!Is<T>(packed_value)) {
-                  return FCP_STATUS(StatusCode::INTERNAL)
+                  return RX_STATUS(StatusCode::INTERNAL)
                          << "value has not the expected type";
                 }
                 return SerializationTraits<T>::Serialize(
@@ -142,7 +156,7 @@ class PolyValue : UniqueObject<absl::any> {
               *result.move_impl(),
               [](absl::any&& packed_value) -> StatusOr<SerializedValue> {
                 if (!Is<std::shared_ptr<T>>(packed_value)) {
-                  return FCP_STATUS(StatusCode::INTERNAL)
+                  return RX_STATUS(StatusCode::INTERNAL)
                          << "value has not the expected type";
                 }
                 return SerializationTraits<T>::Serialize(std::move(
@@ -181,7 +195,7 @@ class PolyValue : UniqueObject<absl::any> {
       packed_value =
           absl::any_cast<ValueWithSerializer>(std::move(packed_value)).value;
     }
-    FCP_RETURN_IF_ERROR(CheckType<T>(packed_value));
+    RX_RETURN_IF_ERROR(CheckType<T>(packed_value));
     return absl::any_cast<T>(std::move(packed_value));
   }
 
@@ -202,7 +216,7 @@ class PolyValue : UniqueObject<absl::any> {
           absl::any_cast<ValueWithSerializer>(std::move(packed_value)).value;
     }
     // Value is actually in a shared_ptr, move it out from there.
-    FCP_RETURN_IF_ERROR(CheckType<std::shared_ptr<T>>(packed_value));
+    RX_RETURN_IF_ERROR(CheckType<std::shared_ptr<T>>(packed_value));
     return StatusOr<T>(std::move(
         *absl::any_cast<std::shared_ptr<T>>(std::move(packed_value))));
   }
@@ -221,10 +235,10 @@ class PolyValue : UniqueObject<absl::any> {
   template <typename T>
   static Status CheckType(absl::any const& value) {
     if (!Is<T>(value)) {
-      return FCP_STATUS(StatusCode::INVALID_ARGUMENT)
+      return RX_STATUS(StatusCode::INVALID_ARGUMENT)
              << "value has not the requested type";
     }
-    return FCP_STATUS(OK);
+    return RX_STATUS(OK);
   }
 
   // Test whether value has expected type.
@@ -247,7 +261,7 @@ struct SerializationTraits<SharedMsg<T>> {
         absl::make_unique<SerializedValue::BytesType>(msg->ByteSizeLong());
     if (!msg->SerializeToArray(bytes->data(),
                                static_cast<int>(bytes->size()))) {
-      return FCP_STATUS(INTERNAL) << "serialization failed";
+      return RX_STATUS(INTERNAL) << "serialization failed";
     }
     return SerializedValue{std::move(bytes)};
   }
@@ -257,7 +271,7 @@ struct SerializationTraits<SharedMsg<T>> {
     if (!msg->ParseFromArray(
             serialized_value.bytes->data(),
             static_cast<int>(serialized_value.bytes->size()))) {
-      return FCP_STATUS(INTERNAL) << "deserialization failed";
+      return RX_STATUS(INTERNAL) << "deserialization failed";
     }
     return SharedMsg<T>(std::move(msg));
   }
@@ -273,7 +287,7 @@ struct SerializationTraits<UniqueMsg<T>> {
         absl::make_unique<SerializedValue::BytesType>(msg->ByteSizeLong());
     if (!msg->SerializeToArray(bytes->data(),
                                static_cast<int>(bytes->size()))) {
-      return FCP_STATUS(INTERNAL) << "serialization failed";
+      return RX_STATUS(INTERNAL) << "serialization failed";
     }
     return SerializedValue{std::move(bytes)};
   }
@@ -283,7 +297,7 @@ struct SerializationTraits<UniqueMsg<T>> {
     if (!msg->ParseFromArray(
             serialized_value.bytes->data(),
             static_cast<int>(serialized_value.bytes->size()))) {
-      return FCP_STATUS(INTERNAL) << "deserialization failed";
+      return RX_STATUS(INTERNAL) << "deserialization failed";
     }
     return UniqueMsg<T>(std::move(msg));
   }

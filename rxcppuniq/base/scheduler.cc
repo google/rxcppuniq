@@ -75,7 +75,7 @@ class WorkerImpl : public Worker, public LifetimeTracker {
       (*wrapped_task)();
 
       // Run the next task.
-      FCP_CHECK(*marker) << "Worker destroyed before all tasks finished";
+      RX_CHECK(*marker) << "Worker destroyed before all tasks finished";
       {
         // Try run next task if any.
         absl::MutexLock lock(&this->busy_);
@@ -97,7 +97,7 @@ class ThreadPoolScheduler : public Scheduler {
   explicit ThreadPoolScheduler(std::size_t thread_count)
       : idle_condition_(absl::Condition(IdleCondition, this)),
         active_count_(thread_count) {
-    FCP_CHECK(thread_count > 0) << "invalid thread_count";
+    RX_CHECK(thread_count > 0) << "invalid thread_count";
 
     // Create threads.
     for (int i = 0; i < thread_count; ++i) {
@@ -108,7 +108,7 @@ class ThreadPoolScheduler : public Scheduler {
   ~ThreadPoolScheduler() override {
     {
       absl::MutexLock lock(&busy_);
-      FCP_CHECK(IdleCondition(this))
+      RX_CHECK(IdleCondition(this))
           << "Thread pool must be idle at destruction time";
 
       threads_should_join_ = true;
@@ -116,8 +116,8 @@ class ThreadPoolScheduler : public Scheduler {
     }
 
     for (auto& thread : threads_) {
-      FCP_CHECK(thread.joinable()) << "Attempted to destroy a threadpool from "
-                                      "one of its running threads";
+      RX_CHECK(thread.joinable()) << "Attempted to destroy a threadpool from "
+                                     "one of its running threads";
       thread.join();
     }
   }
@@ -154,7 +154,7 @@ class ThreadPoolScheduler : public Scheduler {
         }
 
         // Destructor invariant
-        FCP_CHECK(!threads_should_join_);
+        RX_CHECK(!threads_should_join_);
         task = std::move(todo_.front());
         todo_.pop();
         ++active_count_;

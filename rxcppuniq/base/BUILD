@@ -1,7 +1,21 @@
-# Description:
-# Base component, containing common functionality used by other FCP components.
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-load("//fcp:config.bzl", "FCP_COPTS")
+# Description:
+# Base library, containing common functionality.
+
+load("//rxcppuniq:config.bzl", "RX_COPTS")
 
 
 package(
@@ -20,7 +34,7 @@ cc_library(
         "move_to_lambda.h",
         "platform.h",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":status_cc_proto",
         "@com_google_absl//absl/base:core_headers",
@@ -40,7 +54,7 @@ cc_library(
     hdrs = [
         "testing.h",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":base",
         "@com_google_googletest//:gtest_main",
@@ -54,7 +68,7 @@ cc_test(
     srcs = [
         "monitoring_test.cc",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":base",
         "@com_google_googletest//:gtest_main",
@@ -67,7 +81,7 @@ cc_test(
     srcs = [
         "platform_test.cc",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":base",
         ":testing",
@@ -81,7 +95,7 @@ cc_test(
     srcs = [
         "testing_test.cc",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     data = [
         "testdata/verify_baseline_test.baseline",
     ],
@@ -100,7 +114,7 @@ cc_library(
     hdrs = [
         "scheduler.h",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":base",
         "@com_google_absl//absl/memory",
@@ -114,7 +128,7 @@ cc_test(
     srcs = [
         "scheduler_test.cc",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":base",
         ":scheduler",
@@ -130,7 +144,7 @@ cc_test(
     srcs = [
         "move_to_lambda_test.cc",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":base",
         ":unique_value",
@@ -160,7 +174,7 @@ cc_library(
     hdrs = [
         "unique_value.h",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = ["@com_google_absl//absl/types:optional"],
 )
 
@@ -169,7 +183,7 @@ cc_test(
     srcs = [
         "unique_value_test.cc",
     ],
-    copts = FCP_COPTS,
+    copts = RX_COPTS,
     deps = [
         ":base",
         ":unique_value",

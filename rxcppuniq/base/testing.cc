@@ -49,7 +49,7 @@ std::string TemporaryTestFile(absl::string_view suffix) {
 }
 
 bool ShouldUpdateBaseline() {
-  return getenv("FCP_UPDATE_BASELINE");
+  return getenv("RX_UPDATE_BASELINE");
 }
 
 StatusOr<std::string> ComputeDiff(absl::string_view baseline_file,
@@ -74,7 +74,7 @@ StatusOr<std::string> ComputeDiff(absl::string_view baseline_file,
     if (status.code() != OK) {
       if (!std_err.empty()) {
         // Indicates a failure in diff execution itself.
-        return FCP_STATUS(INTERNAL) << "command failed: " << std_err;
+        return RX_STATUS(INTERNAL) << "command failed: " << std_err;
       }
       diff_result = std_out;
     }
@@ -122,10 +122,10 @@ StatusOr<std::string> VerifyAgainstBaseline(absl::string_view baseline_file,
 #else
     const char* temp_dir = getenv("TEMP");
 #endif
-    auto output_dir =
-        ConcatPath(temp_dir, absl::StrCat("fcp_", TestCaseName()));
-    EnsureDirExists(output_dir);
-    new_baseline_file = ConcatPath(output_dir, BaseName(baseline_file));
+    auto temp_output_dir =
+        ConcatPath(temp_dir, absl::StrCat("rx_", TestCaseName()));
+    EnsureDirExists(temp_output_dir);
+    new_baseline_file = ConcatPath(temp_output_dir, BaseName(baseline_file));
     absl::StrAppend(&diff_result, "\nNew baseline file: ", new_baseline_file);
     absl::StrAppend(&diff_result, "\nTo update, use:");
     absl::StrAppend(&diff_result, "\n\n cp ", new_baseline_file, " ",
@@ -135,8 +135,7 @@ StatusOr<std::string> VerifyAgainstBaseline(absl::string_view baseline_file,
   if (!auto_update) {
     absl::StrAppend(&diff_result,
                     "\nTo automatically update baseline files, use");
-    absl::StrAppend(&diff_result,
-                    "\nenvironment variable FCP_UPDATE_BASELINE.");
+    absl::StrAppend(&diff_result, "\nenvironment variable RX_UPDATE_BASELINE.");
   }
 
   // Write the new baseline.
@@ -147,7 +146,7 @@ StatusOr<std::string> VerifyAgainstBaseline(absl::string_view baseline_file,
 
   // Deliver result.
   if (auto_update) {
-    FCP_LOG(INFO) << diff_result;
+    RX_LOG(INFO) << diff_result;
     diff_result = "";  // make test pass
   }
   return diff_result;

@@ -51,7 +51,7 @@ StatusOr<std::string> ReadFileToString(absl::string_view file_name) {
   auto file_name_str = std::string(file_name);
   std::ifstream is(file_name_str);
   if (!is) {
-    return FCP_STATUS(INTERNAL) << "cannot read file " << file_name_str;
+    return RX_STATUS(INTERNAL) << "cannot read file " << file_name_str;
   }
   std::ostringstream buffer;
   buffer << is.rdbuf();
@@ -64,26 +64,26 @@ Status WriteStringToFile(absl::string_view file_name,
   auto file_name_str = std::string(file_name);
   std::ofstream os(file_name_str);
   if (!os) {
-    return FCP_STATUS(StatusCode::INTERNAL)
+    return RX_STATUS(StatusCode::INTERNAL)
            << "cannot create file " << file_name_str;
   }
   os << content;
   os.close();
-  return FCP_STATUS(OK);
+  return RX_STATUS(OK);
 }
 
 Status ReadFileToMessage(absl::string_view file_name,
                          google::protobuf::Message* message) {
-  FCP_CHECK(message != nullptr);
+  RX_CHECK(message != nullptr);
   auto file_name_str = std::string(file_name);
   std::ifstream is(file_name_str);
   if (!is) {
-    return FCP_STATUS(NOT_FOUND) << "cannot read file " << file_name_str;
+    return RX_STATUS(NOT_FOUND) << "cannot read file " << file_name_str;
   }
   if (!message->ParseFromIstream(&is)) {
-    return FCP_STATUS(INVALID_ARGUMENT) << "cannot parse message";
+    return RX_STATUS(INVALID_ARGUMENT) << "cannot parse message";
   }
-  return FCP_STATUS(OK);
+  return RX_STATUS(OK);
 }
 
 bool FileExists(absl::string_view file_name) {
@@ -114,7 +114,7 @@ std::string BaseName(absl::string_view path) {
 
 Status EnsureDirExists(absl::string_view path) {
   if (FileExists(path)) {
-    return FCP_STATUS(OK);
+    return RX_STATUS(OK);
   }
   auto path_str = std::string(path);
   int error;
@@ -124,16 +124,16 @@ Status EnsureDirExists(absl::string_view path) {
   error = _mkdir(path_str.c_str());
 #endif
   if (error) {
-    return FCP_STATUS(INTERNAL) << "cannot create directory " << path_str
-                                << "(error code " << error << ")";
+    return RX_STATUS(INTERNAL) << "cannot create directory " << path_str
+                               << "(error code " << error << ")";
   }
-  return FCP_STATUS(OK);
+  return RX_STATUS(OK);
 }
 
 Status ShellCommand(absl::string_view command, std::string* stdout_result,
                     std::string* stderr_result) {
 #ifdef _WIN32
-  return FCP_STATUS(UNIMPLEMENTED)
+  return RX_STATUS(UNIMPLEMENTED)
          << "rx::ShellCommand not implemented for Windows";
 #else
   // Prepare command for output redirection.
@@ -174,10 +174,10 @@ Status ShellCommand(absl::string_view command, std::string* stdout_result,
 
   // Construct result.
   if (result != 0) {
-    return FCP_STATUS(INTERNAL) << "command execution failed: " << command_str
-                                << " returns " << result;
+    return RX_STATUS(INTERNAL) << "command execution failed: " << command_str
+                               << " returns " << result;
   } else {
-    return FCP_STATUS(OK);
+    return RX_STATUS(OK);
   }
 #endif
 }

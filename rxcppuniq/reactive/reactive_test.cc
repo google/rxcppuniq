@@ -70,7 +70,7 @@ TEST(ReactiveTest, GeneratorPropagatesError) {
   Publisher<int32_t>::Generator<int32_t>(
       0,
       [](int32_t& state) -> StatusOr<int32_t> {
-        return state == 1 ? FCP_STATUS(INVALID_ARGUMENT)
+        return state == 1 ? RX_STATUS(INVALID_ARGUMENT)
                           : StatusOr<int32_t>(state++);
       })
       .Subscribe(BufferingSubscriber(buffer, INVALID_ARGUMENT));
@@ -154,7 +154,7 @@ TEST(ReactiveTest, MapUniqueSuccess) {
 }
 
 TEST(ReactiveTest, MapPropagatesError) {
-  Publisher<int32_t>::Error(FCP_STATUS(INVALID_ARGUMENT))
+  Publisher<int32_t>::Error(RX_STATUS(INVALID_ARGUMENT))
       .Map<int32_t>([](int32_t x) { return x + 1; })
       .Subscribe(ExpectErrorSubscriber<int32_t>(INVALID_ARGUMENT));
 }
@@ -243,7 +243,7 @@ TEST(ReactiveTest, FlatMapErrorHandling) {
         if (x != 2) {
           return Publisher<int32_t>({x, x});
         } else {
-          return Publisher<int32_t>::Error(FCP_STATUS(NOT_FOUND));
+          return Publisher<int32_t>::Error(RX_STATUS(NOT_FOUND));
         }
       })
       .Subscribe(BufferingSubscriber(buffer, NOT_FOUND));
@@ -274,7 +274,7 @@ TEST(ReactiveTest, AsyncError) {
   auto produce_on = SharedObject<Worker>(scheduler->CreateWorker());
   auto consume_on = SharedObject<Worker>(scheduler->CreateWorker());
   vector<int64_t> buffer;
-  Publisher<int64_t>::Error(FCP_STATUS(NOT_FOUND))
+  Publisher<int64_t>::Error(RX_STATUS(NOT_FOUND))
       .Async(produce_on, consume_on)
       .Subscribe(BufferingSubscriber(buffer, NOT_FOUND));
   scheduler->WaitUntilIdle();

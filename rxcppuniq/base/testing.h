@@ -34,7 +34,7 @@ namespace rx {
 std::string TestName();
 
 /**
- * Gets path to a test data file based on a path relative to FCP project root.
+ * Gets path to a test data file based on a path relative to project root.
  */
 std::string GetTestDataPath(absl::string_view relative_path);
 

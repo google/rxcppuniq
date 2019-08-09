@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# RxCppUniq is an implementation of reactive streams (reactive-streams.org)
-# which is tailored for the C++ unique programming model (move semantics).
-# It also supports (and only supports) strict flow control.
+# cc_* rules should include this list in copts. If additional cc_*-wide
+# customization appears, we might want to switch to macros.
 
-package(default_visibility = [":internal"])
+"""This is the definition site for things we want to keep consistent, like copts."""
 
-licenses(["notice"])  # Apache 2.0
-
-exports_files([
-    "LICENSE",
-])
-
-package_group(
-    name = "internal",
-    includes = [
-    ],
-    packages = [
-        "//rxcppuniq/...",
-    ],
-)
+RX_COPTS = [
+]

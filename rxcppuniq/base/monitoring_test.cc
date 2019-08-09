@@ -27,7 +27,7 @@ namespace {
 
 TEST(MonitoringTest, LogInfo) {
   testing::internal::CaptureStderr();
-  FCP_LOG(INFO) << "info log of something happening";
+  RX_LOG(INFO) << "info log of something happening";
   std::string output = testing::internal::GetCapturedStderr();
   ASSERT_THAT(output,
               testing::MatchesRegex("I.*info log of something happening\n"));
@@ -35,7 +35,7 @@ TEST(MonitoringTest, LogInfo) {
 
 TEST(MonitoringTest, LogWarning) {
   testing::internal::CaptureStderr();
-  FCP_LOG(WARNING) << "warning log of something happening";
+  RX_LOG(WARNING) << "warning log of something happening";
   std::string output = testing::internal::GetCapturedStderr();
   ASSERT_THAT(output,
               testing::MatchesRegex("W.*warning log of something happening\n"));
@@ -43,34 +43,34 @@ TEST(MonitoringTest, LogWarning) {
 
 TEST(MonitoringTest, LogError) {
   testing::internal::CaptureStderr();
-  FCP_LOG(ERROR) << "error log of something happening";
+  RX_LOG(ERROR) << "error log of something happening";
   std::string output = testing::internal::GetCapturedStderr();
   ASSERT_THAT(output,
               testing::MatchesRegex("E.*error log of something happening\n"));
 }
 
 TEST(MonitoringTest, LogFatal) {
-  ASSERT_DEATH({ FCP_LOG(FATAL) << "fatal log"; }, "fatal log");
+  ASSERT_DEATH({ RX_LOG(FATAL) << "fatal log"; }, "fatal log");
 }
 
 TEST(MonitoringTest, LogIfTrue) {
   testing::internal::CaptureStderr();
-  FCP_LOG_IF(INFO, true) << "some log";
+  RX_LOG_IF(INFO, true) << "some log";
   std::string output = testing::internal::GetCapturedStderr();
   ASSERT_THAT(output, testing::MatchesRegex("I.*some log\n"));
 }
 
 TEST(MonitoringTest, LogIfFalse) {
   testing::internal::CaptureStderr();
-  FCP_LOG_IF(INFO, false) << "some log";
+  RX_LOG_IF(INFO, false) << "some log";
   std::string output = testing::internal::GetCapturedStderr();
   ASSERT_EQ(output, "");
 }
 
-TEST(MonitoringTest, CheckSucceeds) { FCP_CHECK(1 < 2); }
+TEST(MonitoringTest, CheckSucceeds) { RX_CHECK(1 < 2); }
 
 TEST(MonitoringTest, CheckFails) {
-  ASSERT_DEATH({ FCP_CHECK(1 < 0); }, "Check failed: 1 < 0.");
+  ASSERT_DEATH({ RX_CHECK(1 < 0); }, "Check failed: 1 < 0.");
 }
 
 TEST(MonitoringTest, StatusOr) {
@@ -78,7 +78,7 @@ TEST(MonitoringTest, StatusOr) {
   ASSERT_TRUE(ok_status.ok());
   ASSERT_EQ(ok_status.ValueOrDie(), 1);
 
-  StatusOr<int> fail_status = FCP_STATUS(ABORTED) << "operation aborted";
+  StatusOr<int> fail_status = RX_STATUS(ABORTED) << "operation aborted";
   ASSERT_FALSE(fail_status.ok());
   ASSERT_EQ(fail_status.status().code(), ABORTED);
   ASSERT_THAT(fail_status.status().message(),

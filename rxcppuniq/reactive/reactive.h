@@ -178,7 +178,7 @@ class Subscription {
    * Fails if has_ended() is true.
    */
   void Cancel() const {
-    FCP_CHECK(!has_ended()) << "access to subscription after stream ended";
+    RX_CHECK(!has_ended()) << "access to subscription after stream ended";
     state_->impl()->Cancel();
   }
 
@@ -191,7 +191,7 @@ class Subscription {
    * Fails if has_ended() is true.
    */
   void Request(std::size_t count) const {
-    FCP_CHECK(!has_ended()) << "access to subscription after stream ended";
+    RX_CHECK(!has_ended()) << "access to subscription after stream ended";
     state_->impl()->Request(count);
   }
 
