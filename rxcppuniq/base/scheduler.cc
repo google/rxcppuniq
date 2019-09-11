@@ -59,7 +59,7 @@ class WorkerImpl : public Worker, public LifetimeTracker {
   }
 
  private:
-  void MaybeRunNext() EXCLUSIVE_LOCKS_REQUIRED(busy_) {
+  void MaybeRunNext() ABSL_EXCLUSIVE_LOCKS_REQUIRED(busy_) {
     if (running_ || steps_.empty()) {
       // Already running, and next task will be executed when finished, or
       // nothing to run.
@@ -87,8 +87,8 @@ class WorkerImpl : public Worker, public LifetimeTracker {
 
   Scheduler* scheduler_;
   absl::Mutex busy_;
-  bool running_ GUARDED_BY(busy_) = false;
-  std::deque<std::function<void()>> steps_ GUARDED_BY(busy_);
+  bool running_ ABSL_GUARDED_BY(busy_) = false;
+  std::deque<std::function<void()>> steps_ ABSL_GUARDED_BY(busy_);
 };
 
 // Implementation of thread pools.
@@ -135,7 +135,7 @@ class ThreadPoolScheduler : public Scheduler {
   }
 
   static bool IdleCondition(ThreadPoolScheduler* pool)
-      EXCLUSIVE_LOCKS_REQUIRED(pool->busy_) {
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(pool->busy_) {
     return pool->todo_.empty() && pool->active_count_ == 0;
   }
 
@@ -181,13 +181,13 @@ class ThreadPoolScheduler : public Scheduler {
   absl::Mutex busy_;
 
   // Set when worker threads should join instead of waiting for work.
-  bool threads_should_join_ GUARDED_BY(busy_) = false;
+  bool threads_should_join_ ABSL_GUARDED_BY(busy_) = false;
 
   // Queue of tasks with work to do.
-  std::queue<std::function<void()>> todo_ GUARDED_BY(busy_);
+  std::queue<std::function<void()>> todo_ ABSL_GUARDED_BY(busy_);
 
   // The number of threads currently doing work in this pool.
-  std::size_t active_count_ GUARDED_BY(busy_);
+  std::size_t active_count_ ABSL_GUARDED_BY(busy_);
 };
 
 }  // namespace

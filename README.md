@@ -13,8 +13,8 @@ types* in C++ -- types with move semantics. Stream elements are produced and
 moved through a stream processing pipeline, with unique ownership maintained.
 Pipelines themselves are also unique, having fully automated memory management.
 Pipelines can be produced and consumed asynchronously. The design is using
-strict flow control, that is, a consumer does not receive elements until he has
-requested them.
+strict flow control, that is, a consumer does not receive elements until they
+have requested them.
 
 This is not an officially supported Google product.
 
